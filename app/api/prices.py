@@ -15,6 +15,10 @@ async def get_session() -> AsyncSession:
         yield session
 
 
+async def get_repo(session: AsyncSession = Depends(get_session)) -> PriceRepository:
+    return PriceRepository(session)
+
+
 ALLOWED_TICKERS = {"btc_usd", "eth_usd"}
 
 
@@ -33,9 +37,8 @@ async def get_all_prices(
     ticker: str = Query(..., description="Ticker, например btc_usd или eth_usd"),
     limit: int = Query(1000, ge=1, le=10000),
     offset: int = Query(0, ge=0),
-    session: AsyncSession = Depends(get_session),
+    repo: PriceRepository = Depends(get_repo),
 ):
-    repo = PriceRepository(session)
     t = normalize_ticker(ticker)
     rows = await repo.get_all(ticker=t, limit=limit, offset=offset)
     return [PriceOut.from_orm(r) for r in rows]
@@ -44,9 +47,8 @@ async def get_all_prices(
 @router.get("/latest", response_model=PriceOut)
 async def get_latest_price(
     ticker: str = Query(..., description="Ticker, например btc_usd или eth_usd"),
-    session: AsyncSession = Depends(get_session),
+    repo: PriceRepository = Depends(get_repo),
 ):
-    repo = PriceRepository(session)
     t = normalize_ticker(ticker)
     row = await repo.get_latest(ticker=t)
     if row is None:
@@ -59,9 +61,8 @@ async def get_prices_range(
     ticker: str = Query(..., description="Ticker, например btc_usd или eth_usd"),
     from_ts: Optional[int] = Query(None, description="UNIX timestamp (inclusive)"),
     to_ts: Optional[int] = Query(None, description="UNIX timestamp (inclusive)"),
-    session: AsyncSession = Depends(get_session),
+    repo: PriceRepository = Depends(get_repo),
 ):
-    repo = PriceRepository(session)
     t = normalize_ticker(ticker)
     rows = await repo.get_range(ticker=t, from_ts=from_ts, to_ts=to_ts)
     return [PriceOut.from_orm(r) for r in rows]
