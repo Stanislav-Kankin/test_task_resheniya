@@ -15,6 +15,8 @@
 ## Переменные окружения
 Скопируйте `.env.example` в `.env` и при необходимости измените значения.
 
+> Важно: для запуска **в Docker** хосты должны быть `db` и `redis` (а не `localhost`).
+
 ## API
 Все методы **GET** и требуют обязательный query-параметр `ticker` (`btc_usd` или `eth_usd`).
 
@@ -32,7 +34,36 @@
 
 Swagger: `/docs`
 
-## Быстрый запуск (Docker: db + redis)
+---
+
+## Быстрый запуск (Docker: всё приложение целиком)
+Поднимает: `api`, `celery_worker`, `celery_beat`, `db`, `redis`, `adminer`.
+
+```bash
+docker compose up -d --build
+```
+
+Открыть в браузере:
+- UI (страница контроля): `http://localhost:8011/`
+- Swagger: `http://localhost:8011/docs`
+- Adminer (GUI для Postgres): `http://localhost:8080`
+
+Проверка записей в БД:
+```bash
+docker compose exec db psql -U postgres -d deribit \
+  -c "SELECT ticker, price, ts_unix FROM prices ORDER BY ts_unix DESC LIMIT 10;"
+```
+
+Логи:
+```bash
+docker compose logs -f --tail=100 api
+docker compose logs -f --tail=100 celery_worker
+docker compose logs -f --tail=100 celery_beat
+```
+
+---
+
+## Dev-режим (Docker: только db + redis, приложение через venv)
 Поднять PostgreSQL и Redis:
 ```bash
 docker compose -f docker-compose.dev.yml up -d
@@ -58,14 +89,16 @@ source env/bin/activate
 python -m celery -A app.tasks.celery_app:celery_app beat -l INFO
 ```
 
-Проверка записей в БД:
+Проверка записей в БД (dev):
 ```bash
-psql "postgresql://postgres:postgres@localhost:5432/deribit" -c "SELECT ticker, price, ts_unix FROM prices ORDER BY ts_unix DESC LIMIT 10;"
+psql "postgresql://postgres:postgres@localhost:5432/deribit" \
+  -c "SELECT ticker, price, ts_unix FROM prices ORDER BY ts_unix DESC LIMIT 10;"
 ```
+
+---
 
 ## Testing (unit)
 1) Установить dev-зависимости:
-
 ```bash
 pip install -r requirements-dev.txt
 ```
@@ -75,10 +108,7 @@ pip install -r requirements-dev.txt
 pytest -q
 ```
 
-### UI (простая страница контроля)
-http://localhost:8011/ — показывает последние цены BTC/ETH и последние записи из БД (обновление раз в 10 секунд).
-
-
+---
 
 ## Design decisions
 1) **Celery + Beat для периодического сбора**  
