@@ -63,6 +63,23 @@ python -m celery -A app.tasks.celery_app:celery_app beat -l INFO
 psql "postgresql://postgres:postgres@localhost:5432/deribit" -c "SELECT ticker, price, ts_unix FROM prices ORDER BY ts_unix DESC LIMIT 10;"
 ```
 
+## Testing (unit)
+1) Установить dev-зависимости:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+2) Запустить тесты:
+```bash
+pytest -q
+```
+
+### UI (простая страница контроля)
+http://localhost:8011/ — показывает последние цены BTC/ETH и последние записи из БД (обновление раз в 10 секунд).
+
+
+
 ## Design decisions
 1) **Celery + Beat для периодического сбора**  
    Используется Celery Beat с расписанием “каждую минуту” для двух тикеров. Это простой и расширяемый способ планирования задач.
