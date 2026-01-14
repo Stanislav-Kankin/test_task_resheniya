@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.core.db import init_db
-from app.api.routes.prices import router as prices_router
+from app.api.prices import router as prices_router
 
 app = FastAPI(title="Deribit Prices API")
 
