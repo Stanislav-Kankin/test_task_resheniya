@@ -15,8 +15,17 @@ async def get_session() -> AsyncSession:
         yield session
 
 
+ALLOWED_TICKERS = {"btc_usd", "eth_usd"}
+
+
 def normalize_ticker(ticker: str) -> str:
-    return ticker.strip().lower()
+    t = ticker.strip().lower()
+    if t not in ALLOWED_TICKERS:
+        raise HTTPException(
+            status_code=422,
+            detail="ticker must be one of: btc_usd, eth_usd",
+        )
+    return t
 
 
 @router.get("", response_model=List[PriceOut])
