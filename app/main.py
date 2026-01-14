@@ -63,7 +63,7 @@ async def ui() -> str:
           <option value="btc_usd">btc_usd</option>
           <option value="eth_usd">eth_usd</option>
         </select>
-        <button onclick="refreshAll()">Обновить</button>
+        <button id="btnRefresh" type="button">Обновить</button>
       </div>
       <div class="muted" style="margin-top:8px;">Авто-обновление раз в 10 секунд</div>
     </div>
